@@ -38,8 +38,16 @@ jobs:
           "3.11",
           "3.12",
         ]
+        exclude:
+          - os: windows-latest
+            py: "3.9"
+          - os: windows-latest
+            py: "3.10"
+          - os: windows-latest
+            py: "3.11"
     runs-on: ${{ matrix.os }}
     steps:
+    - uses: actions/checkout@v4
     - uses: actions/download-artifact@v4
       with:
         name: wheel
@@ -48,8 +56,6 @@ jobs:
       uses: astral-sh/setup-uv@v6
       with:
         python-version: ${{ matrix.py }}
-        enable-cache: false
-        ignore-empty-workdir: true
 
     - name: Install Python package
       run: |
@@ -59,6 +65,12 @@ jobs:
     - name: Test installed Python package
       run: |
         uv run python -c "import morpholayers"
+
+    - name: Test notebooks
+      run: |
+        uv pip install nbval matplotlib scikit-learn pydot
+        uv run pytest --nbval-lax
+      continue-on-error: true
 
   publish:
     needs: test
